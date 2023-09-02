@@ -1234,6 +1234,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "duco": {
+      "name": "duco",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "dunehd": {
       "name": "Dune HD",
       "integration_type": "hub",
