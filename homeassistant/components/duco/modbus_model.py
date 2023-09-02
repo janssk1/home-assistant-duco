@@ -111,7 +111,9 @@ class VentilationStatus(Enum):
     ERROR = 99
 
 
-PARAM_MODULE_TYPE = NodeInputRegister[ModuleType](0, ModuleType)
+PARAM_MODULE_TYPE = NodeInputRegister[ModuleType | None](
+    0, lambda num: ModuleType(num) if num else None
+)
 
 PARAM_VENTILATION_STATUS = NodeInputRegister[VentilationStatus](1, VentilationStatus)
 PARAM_VENTILATION_PERCENTAGE = NodeInputRegister[int](2, lambda num: num)
