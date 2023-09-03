@@ -1235,7 +1235,6 @@
       "iot_class": "cloud_polling"
     },
     "duco": {
-      "name": "duco",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -6712,6 +6711,7 @@
     "cpuspeed",
     "demo",
     "derivative",
+    "duco",
     "emulated_roku",
     "filesize",
     "garages_amsterdam",

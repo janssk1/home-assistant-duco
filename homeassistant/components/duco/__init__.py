@@ -4,13 +4,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from homeassistant.components.modbus import ModbusHub, get_hub
+from homeassistant.components.modbus import ModbusHub
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SLAVE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_FAKE, CONF_HUB, DOMAIN
+from .const import CONF_FAKE, CONF_HUB, DOMAIN, MODBUS_CONFIG_EXAMPLE, MODBUS_DOMAIN
 from .coordinator import DucoCoordinator
 from .entity import NodeInfo
 from .fakemodbus import FakeModbus
@@ -45,8 +45,13 @@ def __get_hub(hass: HomeAssistant, entry: ConfigEntry):
     if fake:
         _LOGGER.warning("******************  Using fake ModBus ******************")
         return FakeModbus()
+    modbus_domain = hass.data.get(MODBUS_DOMAIN)
+    if not modbus_domain:
+        raise ConfigEntryNotReady(
+            f"Modbus integration not configured. Add a modbus section in configuration.yaml. Eg:{MODBUS_CONFIG_EXAMPLE}"
+        )
     hub_name = entry.data[CONF_HUB]
-    hub: ModbusHub = get_hub(hass, hub_name)
+    hub: ModbusHub = modbus_domain.get(hub_name)
     if not hub:
         raise ConfigEntryNotReady(
             f"Modbus hub {hub_name} not configured. Check modus section in configuration.yaml"
@@ -66,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nodes.append(NodeInfo(coordinator, ModuleType.MASTER_UNIT, 10, None))
         for i in range(2, 7):
             node_id = i * 10
-            module_type: ModuleType = await PARAM_MODULE_TYPE.async_read(
+            module_type: ModuleType | None = await PARAM_MODULE_TYPE.async_read(
                 modbus, node_id
             )
             if module_type:

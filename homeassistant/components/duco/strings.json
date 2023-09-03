@@ -1,11 +1,18 @@
 {
+  "title": "DucoBox Focus",
   "config": {
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user": {
+        "data": {
+          "slave": "Slave ID",
+          "hub": "ModBus Hub",
+          "fake": "Fake"
+        }
       }
     },
     "abort": {
+      "modbus_not_configured": "Modbus integration not configured. Add a modbus section in configuration.yaml. Eg: \n```{example}\n```",
+      "modbus_hub_not_configured": "No Modbus hubs configured. Add at least one hub below the modbus section. Eg: \n```{example}\n```",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }

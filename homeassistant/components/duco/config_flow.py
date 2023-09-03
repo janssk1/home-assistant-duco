@@ -9,25 +9,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.modbus import DEFAULT_HUB
 from homeassistant.const import CONF_SLAVE
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import selector
 
-from .const import CONF_FAKE, CONF_HUB, DOMAIN
+from .const import CONF_FAKE, CONF_HUB, DOMAIN, MODBUS_CONFIG_EXAMPLE, MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HUB, default=DEFAULT_HUB, description="Modbus HUB"): str,
-        vol.Required(
-            CONF_SLAVE,
-            vol.All(int, vol.Range(min=0, max=32)),
-            description="Modbus slave id",
-        ): int,
-        vol.Optional(CONF_FAKE, description="Modbus slave id"): bool,
-    }
-)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -35,28 +22,36 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def validate_input(
-        self, hass: HomeAssistant, data: dict[str, Any]
-    ) -> dict[str, Any]:
-        """Validate the user input allows us to connect."""
-        # api = renson.RensonVentilation(data[CONF_HOST])
-        #
-        # if not await self.hass.async_add_executor_job(api.connect):
-        #     raise CannotConnect
-        #
-        return {"title": "Duco"}
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+            modbus_domain = self.hass.data.get(MODBUS_DOMAIN)
+            if not modbus_domain:
+                return self.async_abort(
+                    reason="modbus_not_configured",
+                    description_placeholders={"example": MODBUS_CONFIG_EXAMPLE},
+                )
+            modbus_hubs = list(modbus_domain.keys())
+            if len(modbus_hubs) == 0:
+                return self.async_abort(
+                    reason="modbus_hub_not_configured",
+                    description_placeholders={"example": MODBUS_CONFIG_EXAMPLE},
+                )
+            vol_schema = vol.Schema(
+                {
+                    vol.Required(CONF_HUB, default=DEFAULT_HUB): selector(
+                        {"select": {"options": modbus_hubs, "mode": "dropdown"}}
+                    ),
+                    vol.Required(
+                        CONF_SLAVE,
+                        default=1,
+                    ): int,
+                    vol.Optional(CONF_FAKE): bool,
+                }
             )
 
+            return self.async_show_form(step_id="user", data_schema=vol_schema)
+
         return self.async_create_entry(title="Duco", data=user_input)
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
